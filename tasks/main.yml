@@ -1,4 +1,18 @@
 ---
+- name: create prometheus groups
+  groups:
+    name: prometheus
+    system: yes
+    state: present
+
+- name: create prometheus user
+  user:
+    name: prometheus
+    system: yes
+    shell: "/sbin/nologin"
+    group: prometheus
+    createhome: no
+    
 - name: download prometheus
   get _url:
     url: https://github.com/prometheus/prometheus/releases/download/v2.24.0/prometheus-2.24.0.linux-amd64.tar.gz
