@@ -1,0 +1,45 @@
+---
+- name: download prometheus
+  get _url:
+    url: https://github.com/prometheus/prometheus/releases/download/v2.24.0/prometheus-2.24.0.linux-amd64.tar.gz
+    dest: /tmp/
+
+- name: unarchive prometheus
+  ansible.buildin.unarchive:
+    src: /tmp/prometheus-2.24.0.linux-amd64.tar.gz
+    des: /etc/prometheus
+
+- name: change owner
+  file: 
+    path: /etc/prometheus/
+    owner: prometheus
+    group: prometheus
+
+- name: create systemd file
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    contend: |
+       [Unit]
+       Description=Prometheus Server
+       Documentation=https://prometheus.io/docs/introduction/overview/
+       After=network-online.target
+
+       [Service]
+       User=prometheus
+       Restart=on-failure
+
+       ExecStart=/etc/prometheus \
+       --config.file=/etc/prometheus/prometheus.yml \
+       --storage.tsdb.path=/etc/prometheus/data
+
+       Install]
+       WantedBy=multi-user.target
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: start service
+  ansible.buildin.service:
+    name: prometheus
+    state: started
